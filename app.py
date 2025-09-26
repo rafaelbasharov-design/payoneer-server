@@ -1,41 +1,23 @@
-from flask import Flask, request, jsonify
-import os
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Маршрут проверки сервера
-@app.route("/")
+# Health check (Render will ping this endpoint)
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    return jsonify({"status": "ok"}), 200
+
+# Тестовый роут (можно проверить в браузере)
+@app.route("/", methods=["GET"])
 def home():
-    return {"message": "Payoneer server is running!"}
+    return "<h1>Payoneer Server is running!</h1>"
 
-# Маршрут для создания платежного запроса (эмуляция Payoneer API)
-@app.route("/request-payment", methods=["POST"])
-def request_payment():
+# Пример будущего эндпоинта для проверки оплаты
+@app.route("/verify", methods=["POST"])
+def verify():
     data = request.json
-    amount = data.get("amount")
-    currency = data.get("currency", "USD")
-    customer_email = data.get("email")
-
-    # ⚠️ Здесь в будущем мы подключим Payoneer API
-    return jsonify({
-        "status": "pending",
-        "amount": amount,
-        "currency": currency,
-        "customer_email": customer_email,
-        "payment_id": "test_12345"
-    })
-
-# Маршрут проверки статуса платежа
-@app.route("/verify-payment/<payment_id>", methods=["GET"])
-def verify_payment(payment_id):
-    # ⚠️ Тут будет запрос в Payoneer API
-    return jsonify({
-        "payment_id": payment_id,
-        "status": "success"  # пока фейковый успех
-    })
+    # Тут потом будет логика проверки через Payoneer API
+    return jsonify({"received": data}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-Купить нужно холодный кошелек-флешка
-Скачать программу Ledger nano x(l)
-Без него не сможешь оплатить
