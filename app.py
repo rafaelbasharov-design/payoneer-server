@@ -1,23 +1,21 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-# Health check (Render will ping this endpoint)
-@app.route("/healthz", methods=["GET"])
-def healthz():
-    return jsonify({"status": "ok"}), 200
-
-# Тестовый роут (можно проверить в браузере)
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
-    return "<h1>Payoneer Server is running!</h1>"
+    return "✅ Gmail AI Server is running (stub mode)."
 
-# Пример будущего эндпоинта для проверки оплаты
+# Заглушка вместо реальной проверки
 @app.route("/verify", methods=["POST"])
 def verify():
     data = request.json
-    # Тут потом будет логика проверки через Payoneer API
-    return jsonify({"received": data}), 200
+    email = data.get("email")
+    
+    # Пока просто подтверждаем для любого email
+    return jsonify({"success": True, "email": email})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
