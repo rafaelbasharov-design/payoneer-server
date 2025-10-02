@@ -11,11 +11,12 @@ def home():
 # Заглушка вместо реальной проверки
 @app.route("/verify", methods=["POST"])
 def verify():
-    data = request.json
-    email = data.get("email")
-    
-    # Пока просто подтверждаем для любого email
-    return jsonify({"success": True, "email": email})
+    try:
+        data = request.get_json(force=True)
+        email = data.get("email")
+        return jsonify({"success": True, "email": email})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
