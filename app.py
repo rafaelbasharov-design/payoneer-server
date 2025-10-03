@@ -4,39 +4,35 @@ import os
 
 app = Flask(__name__)
 
-# Укажи свой API ключ в переменной окружения OPENAI_API_KEY
+# 🔑 Добавь сюда свой OpenAI API ключ (или используй Render → Environment Variables)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
-    return "Payoneer/AI Gmail Server is running!"
+    return "AI Gmail Server is running 🚀"
 
 @app.route("/generate-reply", methods=["POST"])
 def generate_reply():
     try:
         data = request.json
-        user_text = data.get("text", "")
+        email_text = data.get("email_text", "")
 
-        if not user_text:
-            return jsonify({"reply": "Ошибка: пустой текст для анализа"}), 400
+        if not email_text:
+            return jsonify({"error": "No email text provided"}), 400
 
-        # Запрос в OpenAI
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Ты помощник, который пишет короткие и вежливые ответы на email."},
-                {"role": "user", "content": f"Вот письмо, на которое нужно ответить:\n\n{user_text}"}
-            ],
+        # Запрос к OpenAI (GPT-3.5 / GPT-4)
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=f"Напиши вежливый ответ на это письмо:\n\n{email_text}\n\nОтвет:",
             max_tokens=150,
             temperature=0.7
         )
 
-        reply_text = completion["choices"][0]["message"]["content"].strip()
-
-        return jsonify({"reply": reply_text})
+        ai_reply = response.choices[0].text.strip()
+        return jsonify({"reply": ai_reply})
 
     except Exception as e:
-        return jsonify({"reply": f"Ошибка сервера: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
