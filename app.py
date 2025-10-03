@@ -1,42 +1,43 @@
+# app.py
 import os
 from flask import Flask, request, jsonify
-import openai
+from flask_cors import CORS
+from openai import OpenAI
 
 app = Flask(__name__)
+CORS(app)
 
-# Берем ключ из переменных окружения Render
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
-    return "✅ Payoneer/Gmail AI Server is running!"
+    return jsonify({"message": "Gmail AI Server running with new OpenAI SDK"})
 
 @app.route("/generate-reply", methods=["POST"])
 def generate_reply():
     try:
-        data = request.json
-        email_text = data.get("email_text", "")
+        data = request.get_json(force=True)
+        text = data.get("message", "")
+        if not text or len(text.strip()) < 3:
+            return jsonify({"error": "No message provided"}), 400
 
-        if not email_text.strip():
-            return jsonify({"error": "Email text is empty"}), 400
-
-        # Генерация ответа
-        completion = openai.chat.completions.create(
-            model="gpt-4o-mini",
+        # Новый синтаксис для openai>=1.0.0
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Ты — помощник, который помогает писать вежливые email-ответы."},
-                {"role": "user", "content": email_text}
+                {"role": "system", "content": "You are an assistant that writes short polite email replies."},
+                {"role": "user", "content": f"Reply to this email:\n\n{text}"}
             ],
-            max_tokens=150
+            max_tokens=250,
+            temperature=0.6
         )
 
-        reply = completion.choices[0].message.content.strip()
-
+        reply = response.choices[0].message.content.strip()
         return jsonify({"reply": reply})
-
     except Exception as e:
+        app.logger.exception("generate-reply error")
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
